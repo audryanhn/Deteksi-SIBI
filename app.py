@@ -7,13 +7,15 @@ import mediapipe as mp
 from tensorflow.keras.models import load_model
 import os
 from Utils.hand_utils import get_hand_landmarks, mp_draw
+import json
 
 # Load model dan label
 @st.cache_resource
 
 def load_model_and_labels():
     model = load_model('Models/model_landmarksV3.4.h5')
-    labels = sorted(os.listdir('Dataset-jari/SIBI'))
+    with open("Data/labels.json", "r") as f :
+        labels = json.load(f)
     return model, labels
 
 model, labels = load_model_and_labels()

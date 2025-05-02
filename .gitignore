@@ -1,7 +1,7 @@
 classification_report.txt
 venvActivation.txt
 history.txt
-Data/
+
 requirements_old.txt
 venv/
-Dataset-jari
+Dataset-jari/SIBI/**/*.jpg
