@@ -1,12 +1,12 @@
 import streamlit as st
-import cv2
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
+import av
 import numpy as np
-from tensorflow.keras.models import load_model
-from Utils.hand_utils import get_hand_landmarks, mp_draw
-import tempfile
+import cv2
 import mediapipe as mp
+from tensorflow.keras.models import load_model
 import os
-import time
+from Utils.hand_utils import get_hand_landmarks, mp_draw
 
 # Load model dan label
 @st.cache_resource
@@ -18,68 +18,55 @@ def load_model_and_labels():
 
 model, labels = load_model_and_labels()
 
-st.title("Deteksi Bahasa Isyarat SIBI dengan MediaPipe")
-st.markdown("Klik tombol di bawah ini untuk mengaktifkan/menonaktifkan kamera")
+mp_hands = mp.solutions.hands
+mp_draw = mp.solutions.drawing_utils
+
+RTC_CONFIG = RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]})
 
 if "camera_on" not in st.session_state:
     st.session_state.camera_on = False
-if "camera" not in st.session_state:
-    st.session_state.camera = None
+
+st.title("Deteksi Bahasa Isyarat SIBI dengan MediaPipe")
+st.markdown("Klik tombol di bawah ini untuk mengaktifkan/menonaktifkan kamera")
 
 
-col1,col2 = st.columns([1,4])
+if st.button("🔁 Mulai / Matikan Kamera"):
+    st.session_state.camera_on = not st.session_state.camera_on
 
-# Tombol Toggle kamera
-with col1: 
-    if st.button("Mulai / Matikan kamera") :
-        if st.session_state.camera_on:
-            if st.session_state.camera :
-                st.session_state.camera.release()
-                st.session_state.camera = None
-            st.session_state.camera_on = False
-        else :
-            st.session_state.camera = cv2.VideoCapture(0)
-            st.session_state.camera_on = True
+if st.session_state.camera_on:
+    st.success("Kamera Aktif ✅")
+else:
+    st.warning("Kamera Non-Aktif ❌")
+# Video Processor
+class VideoProcessor(VideoProcessorBase):
+    def __init__(self):
+        self.hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5)
 
+    def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
+        img = frame.to_ndarray(format="bgr24")
+        results = self.hands.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
-# Status Camera
-with col2 :
-    if st.session_state.camera_on :
-        st.success("Kamera Aktif ✅")
-    else:
-        st.warning("Kamera Non-Aktif ❌")
+        if results.multi_hand_landmarks:
+            for hand_landmarks in results.multi_hand_landmarks:
+                landmarks = []
+                for landmark in hand_landmarks.landmark:
+                    landmarks.extend([landmark.x, landmark.y, landmark.z])
+                landmarks = np.array(landmarks).reshape(1, -1)
 
-# Akses webcam
-FRAME_WINDOW = st.empty()
+                prediction = model.predict(landmarks)
+                class_id = np.argmax(prediction)
+                label = labels[class_id]
 
-if st.session_state.camera_on and st.session_state.camera:
-    while st.session_state.camera_on:
+                cv2.putText(img, f"Huruf: {label}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+                mp_draw.draw_landmarks(img, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-        ret, frame = st.session_state.camera.read()
+        return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-        if not ret :
-            st.error("Gagal Membuka Kamera")
-            break
-
-        landmarks, raw_landmarks = get_hand_landmarks(frame)
-
-        if landmarks is not None:
-            prediction = model.predict(landmarks)
-            label_idx = np.argmax(prediction)
-            pred_label = labels[label_idx]
-            confidence = np.max(prediction)
-
-            # cv2.putText(frame, f'{pred_label} ({confidence:.2f})', (10, 30),
-            #             cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-            cv2.putText(frame, f'Huruf : {pred_label} ' , (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
-            
-
-            mp_draw.draw_landmarks(frame, raw_landmarks, mp.solutions.hands.HAND_CONNECTIONS)
-
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        FRAME_WINDOW.image(frame)
-        time.sleep(0.03)
-
-    FRAME_WINDOW.empty()
-
-   
+# Aktifkan stream jika kamera aktif
+if st.session_state.camera_on:
+    webrtc_streamer(
+        key="example",
+        video_processor_factory=VideoProcessor,
+        rtc_configuration=RTC_CONFIG,
+        media_stream_constraints={"video": True, "audio": False},
+    )
