@@ -1,0 +1,12 @@
+numpy==1.26.4                # Kompatibel dengan Python 3.11
+opencv-python==4.9.0.80      # Versi stabil terakhir per April 2024, kompatibel
+mediapipe==0.10.11           # Terakhir stabil & kompatibel dengan Python 3.11
+scikit-learn==1.4.2          # Versi stabil terbaru, cocok untuk Python 3.11
+tensorflow==2.15.0           # Versi terakhir yang stabil dan resmi support Python 3.11
+tqdm==4.66.2                 # Kompatibel sepenuhnya
+pickle-mixin==1.0.2          # Aman, ini tidak terlalu sering update
+pandas==2.2.2                # Terbaru & kompatibel dengan Python 3.11
+plotly==5.21.0               # Stabil & kompatibel
+seaborn==0.13.2              # Terbaru dan aman
+Streamlit==1.45.0
+streamlit-camera-input-live==0.2.0
