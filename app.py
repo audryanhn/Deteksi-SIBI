@@ -13,10 +13,14 @@ import json
 @st.cache_resource
 
 def load_model_and_labels():
-    model = load_model('Models/model_landmarksV3.4.h5')
-    with open("Data/labels.json", "r") as f :
-        labels = json.load(f)
-    return model, labels
+    try :
+        model = load_model('Models/model_landmarksV3.4.h5')
+        with open("Data/labels.json", "r") as f :
+            labels = json.load(f)
+        return model, labels
+    except Exception as e :
+        st.error(f"Gagal Memuat kode atau label: {e}")
+        raise e
 
 model, labels = load_model_and_labels()
 
@@ -55,12 +59,14 @@ class VideoProcessor(VideoProcessorBase):
                     landmarks.extend([landmark.x, landmark.y, landmark.z])
                 landmarks = np.array(landmarks).reshape(1, -1)
 
-                prediction = model.predict(landmarks)
-                class_id = np.argmax(prediction)
-                label = labels[class_id]
-
-                cv2.putText(img, f"Huruf: {label}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-                mp_draw.draw_landmarks(img, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+                try : 
+                    prediction = model.predict(landmarks)
+                    class_id = np.argmax(prediction)
+                    label = labels[class_id]
+                    cv2.putText(img, f"Huruf: {label}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+                    mp_draw.draw_landmarks(img, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+                except Exception as e :
+                    print(f"Prediction Error, {e}")
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 

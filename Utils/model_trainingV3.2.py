@@ -45,7 +45,7 @@ history = model.fit(X_train, y_train, epochs=60, batch_size=32, validation_data=
 # history = model.fit(X_train, y_train, epochs=60, batch_size=32, validation_data=(X_test, y_test))
 
 # Simpan model
-modelName = 'model_landmarksV3.4.h5'
+modelName = 'model_landmarksV3.5.h5'
 model.save(os.path.join("Models/" ,modelName) )
 
 # Evaluasi model
