@@ -50,6 +50,7 @@ class VideoProcessor(VideoProcessorBase):
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
+        print("Frame Received")
         results = self.hands.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
         if results.multi_hand_landmarks:
@@ -68,6 +69,8 @@ class VideoProcessor(VideoProcessorBase):
                 except Exception as e :
                     print(f"Prediction Error, {e}")
 
+        
+        print(av.VideoFrame.from_ndarray(img, format="bgr24"))
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
 # Aktifkan stream jika kamera aktif
@@ -77,4 +80,5 @@ if st.session_state.camera_on:
         video_processor_factory=VideoProcessor,
         rtc_configuration=RTC_CONFIG,
         media_stream_constraints={"video": True, "audio": False},
+        async_processing=True
     )
