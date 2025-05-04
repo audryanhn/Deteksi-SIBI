@@ -50,7 +50,7 @@ class VideoProcessor(VideoProcessorBase):
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
-        print("Frame Received")
+        # logging.debug("Frame Received")
         results = self.hands.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
         if results.multi_hand_landmarks:
@@ -63,7 +63,7 @@ class VideoProcessor(VideoProcessorBase):
                 try : 
                     prediction = model.predict(landmarks)
                     class_id = np.argmax(prediction)
-                    label = labels[class_id]
+                    label = labels[class_id] if class_id < len(labels) else "Unknown"
                     cv2.putText(img, f"Huruf: {label}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                     mp_draw.draw_landmarks(img, hand_landmarks, mp_hands.HAND_CONNECTIONS)
                 except Exception as e :
