@@ -10,5 +10,5 @@ plotly==5.20.0
 seaborn==0.13.2
 streamlit-camera-input-live==0.2.0
 streamlit-webrtc==0.45.0
-aioice==0.7.6
+aioice==0.9.0
 aiortc==1.5.0
