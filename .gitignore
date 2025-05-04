@@ -3,5 +3,6 @@ venvActivation.txt
 history.txt
 
 requirements_old.txt
+requirements_old2.txt
 venv/
 Dataset-jari/SIBI/**/*.jpg
