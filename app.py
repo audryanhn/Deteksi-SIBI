@@ -14,7 +14,7 @@ import json
 
 def load_model_and_labels():
     try :
-        model = load_model('Models/model_landmarksV3.4.h5')
+        model = load_model('Models/model_landmarksV3.3.h5')
         with open("Data/labels.json", "r") as f :
             labels = json.load(f)
         return model, labels
